@@ -1,29 +1,38 @@
+import { addToFavourites, removeFromFavourites } from '@/lib/userData';
 import Link from 'next/link';
 import { Button, Card } from 'react-bootstrap';
 import useSWR from 'swr';
 import Error from 'next/error';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import { favouritesAtom } from '@/store';
 
 export default function ArtworkCardDetail({ objectID }) {
-  const { data, error } = useSWR(objectID ? `https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectID}` : null);
-  
-  const [favouritesList, setFavouritesList] = useAtom(favouritesAtom);
-  const [showAdded, setShowAdded] = useState(favouritesList.includes(objectID));
+  const { data, error } = useSWR(
+    objectID ? `https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectID}` : null
+  );
 
-  function favouritesClicked() {
+  const [favouritesList, setFavouritesList] = useAtom(favouritesAtom);
+  const [showAdded, setShowAdded] = useState(false);
+
+  // ✅ Sync state with atom
+  useEffect(() => {
+    setShowAdded(favouritesList?.includes(objectID));
+  }, [favouritesList, objectID]);
+
+  // ✅ Handle favourites add/remove via API
+  async function favouritesClicked() {
+    let updatedList;
     if (showAdded) {
-      setFavouritesList(current => current.filter(fav => fav !== objectID));
+      updatedList = await removeFromFavourites(objectID);
     } else {
-      setFavouritesList(current => [...current, objectID]);
+      updatedList = await addToFavourites(objectID);
     }
+    setFavouritesList(updatedList);
     setShowAdded(!showAdded);
   }
 
-  if (error) {
-    return <Error statusCode={404} />;
-  }
+  if (error) return <Error statusCode={404} />;
 
   if (data) {
     return (
@@ -35,7 +44,6 @@ export default function ArtworkCardDetail({ objectID }) {
             <strong>Date: </strong>{data.objectDate || "N/A"}<br />
             <strong>Classification: </strong>{data.classification || "N/A"}<br />
             <strong>Medium: </strong>{data.medium || "N/A"}<br /><br />
-            
             <strong>Artist: </strong> {data.artistDisplayName || "N/A"} 
             {data.artistWikidata_URL && (
               <> (<a href={data.artistWikidata_URL} target="_blank" rel="noreferrer">wiki</a>) </>
@@ -44,7 +52,10 @@ export default function ArtworkCardDetail({ objectID }) {
             <strong>Dimensions: </strong> {data.dimensions || "N/A"}
           </Card.Text>
 
-          <Button variant={showAdded ? "primary" : "outline-primary"} onClick={favouritesClicked}>
+          <Button
+            variant={showAdded ? "primary" : "outline-primary"}
+            onClick={favouritesClicked}
+          >
             {showAdded ? "+ Favourite (added)" : "+ Favourite"}
           </Button>
         </Card.Body>

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { useAtom } from 'jotai';
 import { searchHistoryAtom } from '../store';
+import { addToHistory } from '@/lib/userData'; // ✅ NEW
 
 export default function AdvancedSearch() {
   const router = useRouter();
@@ -18,7 +19,8 @@ export default function AdvancedSearch() {
 
   const [searchHistory, setSearchHistory] = useAtom(searchHistoryAtom);
 
-  function submitForm(data) {
+  // ✅ Make async to use addToHistory
+  async function submitForm(data) {
     let queryString = `${data.searchBy}=true`;
 
     if (data.geoLocation) queryString += `&geoLocation=${data.geoLocation.trim()}`;
@@ -27,7 +29,8 @@ export default function AdvancedSearch() {
     queryString += `&isHighlight=${data.isHighlight ? true : false}`;
     queryString += `&q=${data.q.trim()}`;
 
-    setSearchHistory(current => [...current, queryString]);
+    // ✅ Persist search via API
+    setSearchHistory(await addToHistory(queryString));
     router.push(`/artwork?${queryString}`);
   }
 
@@ -65,9 +68,8 @@ export default function AdvancedSearch() {
             <Form.Label>Geo Location</Form.Label>
             <Form.Control type="text" placeholder="" {...register("geoLocation")} />
             <Form.Text className="text-muted">
-  {"Case Sensitive String (e.g., \"Europe\", \"France\", \"Paris\", \"China\", \"New York\"), multiple values separated by |"}
-</Form.Text>
-
+              {"Case Sensitive String (e.g., \"Europe\", \"France\", \"Paris\", \"China\", \"New York\"), multiple values separated by |"}
+            </Form.Text>
           </Form.Group>
         </Col>
 
@@ -76,9 +78,8 @@ export default function AdvancedSearch() {
             <Form.Label>Medium</Form.Label>
             <Form.Control type="text" placeholder="" {...register("medium")} />
             <Form.Text className="text-muted">
-  {"Case Sensitive String (e.g., \"Ceramics\", \"Furniture\", \"Paintings\", \"Sculpture\", \"Textiles\"), multiple values separated by |"}
-</Form.Text>
-
+              {"Case Sensitive String (e.g., \"Ceramics\", \"Furniture\", \"Paintings\", \"Sculpture\", \"Textiles\"), multiple values separated by |"}
+            </Form.Text>
           </Form.Group>
         </Col>
       </Row>

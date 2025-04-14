@@ -1,29 +1,42 @@
-// ✅ checkUser function for login
-async function checkUser(userName, password) {
-  const users = [
-    { _id: "1", userName: "admin", password: "1234" },
-    { _id: "2", userName: "test", password: "abcd" }
-  ];
+const bcrypt = require('bcryptjs');
+const User = require('./models/user');
 
-  const user = users.find(u => u.userName === userName);
+async function getUserByEmail(userName) {
+  return await User.findOne({ email: userName });
+}
+
+async function validatePassword(user, password) {
+  return await bcrypt.compare(password, user.password);
+}
+
+async function checkUser(userName, password) {
+  const user = await getUserByEmail(userName);
   if (!user) throw new Error("User not found");
-  if (user.password !== password) throw new Error("Wrong password");
+
+  const isValid = await validatePassword(user, password);
+  if (!isValid) throw new Error("Wrong password");
 
   return user;
 }
 
-// ✅ checkUserById function for token validation
 async function checkUserById(id) {
-  const users = [
-    { _id: "1", userName: "admin", password: "1234" },
-    { _id: "2", userName: "test", password: "abcd" }
-  ];
-
-  return users.find(u => u._id === id);
+  return await User.findById(id);
 }
 
-// ✅ Export both functions
+async function createUser(userName, password) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = new User({
+    email: userName,
+    password: hashedPassword,
+    favourites: [],
+    history: []
+  });
+  return await newUser.save();
+}
+
 module.exports = {
   checkUser,
-  checkUserById
+  checkUserById,
+  checkUserByUsername,
+  createUser
 };
