@@ -2,7 +2,6 @@ import { useAtom } from 'jotai';
 import { searchHistoryAtom } from '@/store';
 import { useRouter } from 'next/router';
 import { Card, ListGroup, Button } from 'react-bootstrap';
-import styles from '@/styles/History.module.css';
 
 export default function History() {
   const [searchHistory, setSearchHistory] = useAtom(searchHistoryAtom);
@@ -39,8 +38,8 @@ export default function History() {
           {parsedHistory.map((historyItem, index) => (
             <ListGroup.Item 
               key={index} 
-              className={styles.historyListItem} 
               onClick={e => historyClicked(e, index)}
+              style={{ cursor: 'pointer' }} // adds interactivity
             >
               {Object.keys(historyItem).map(key => (
                 <span key={key}>{key}: <strong>{historyItem[key]}</strong>&nbsp;</span>

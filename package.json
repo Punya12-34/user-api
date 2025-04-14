@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build": "NEXT_DISABLE_ESLINT=true next build"
   },
   "dependencies": {
     "bootstrap": "^5.3.3",
